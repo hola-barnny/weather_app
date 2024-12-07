@@ -1,0 +1,23 @@
+<!-- app/templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        <form method="POST" action="/forecast">
+            <input type="text" name="city" placeholder="Enter city" required>
+            <button type="submit">Get Weather</button>
+        </form>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+    </div>
+</body>
+</html>
+

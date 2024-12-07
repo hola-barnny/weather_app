@@ -1,0 +1,25 @@
+<!-- app/templates/forecast.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forecast</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Forecast</h1>
+        <h2>{{ weather['temperature'] }}°C - {{ weather['weather'] }}</h2>
+        <p>Humidity: {{ weather['humidity'] }}%</p>
+        <img src="http://openweathermap.org/img/wn/{{ weather['icon'] }}@2x.png" alt="Weather Icon">
+        <h3>Forecast</h3>
+        <ul>
+            {% for day in forecast %}
+                <li>{{ day.date }}: {{ day.temperature }}°C - {{ day.weather }}</li>
+            {% endfor %}
+        </ul>
+        <a href="/">Back to Home</a>
+    </div>
+</body>
+</html>
