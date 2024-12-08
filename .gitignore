@@ -1,0 +1,27 @@
+# Python-specific files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+
+venv/
+env/
+
+
+instance/
+.webassets-cache
+
+
+.idea/
+.vscode/
+
+
+.DS_Store
+Thumbs.db
+
+
+*.log
+
