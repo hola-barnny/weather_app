@@ -1,12 +1,12 @@
 import requests
-from app.models import db, WeatherSearchHistory  # Import db and model from the app package
+from app.models import db, WeatherSearchHistory
 from datetime import datetime
 
 # Function to fetch weather data from OpenWeatherMap API
 def get_weather_data(city):
     try:
         # OpenWeatherMap API endpoint and your API key
-        API_KEY = 'your_openweathermap_api_key'  # Replace with your actual API key
+        API_KEY = 'd9fea7939f24f617ce85b4327a724acc'
         WEATHER_API_URL = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
         
         # Make a GET request to fetch the data
@@ -20,12 +20,12 @@ def get_weather_data(city):
         # Extracting relevant weather information
         weather_info = {
             'city': city,
-            'temperature': data['main']['temp'],  # Temperature in Celsius
-            'weather': data['weather'][0]['description'],  # Weather condition
-            'humidity': data['main']['humidity'],  # Humidity percentage
-            'icon': data['weather'][0]['icon'],  # Weather icon
-            'latitude': data['coord']['lat'],  # Latitude
-            'longitude': data['coord']['lon'],  # Longitude
+            'temperature': data['main']['temp'],
+            'weather': data['weather'][0]['description'],
+            'humidity': data['main']['humidity'],
+            'icon': data['weather'][0]['icon'],
+            'latitude': data['coord']['lat'],
+            'longitude': data['coord']['lon'],
         }
         
         return weather_info
@@ -37,7 +37,7 @@ def get_weather_data(city):
 # Function to save search history into the database
 def save_weather_history(weather_data):
     try:
-        # Create a new history entry and add it to the session
+        
         history_entry = WeatherSearchHistory(
             city=weather_data['city'],
             temperature=weather_data['temperature'],
@@ -46,10 +46,10 @@ def save_weather_history(weather_data):
             icon=weather_data['icon'],
             latitude=weather_data['latitude'],
             longitude=weather_data['longitude'],
-            date=datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # Current timestamp
+            date=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
         
-        # Add and commit the new history entry to the database
+            # Save the entry to the database
         db.session.add(history_entry)
         db.session.commit()
         print(f"Weather history for {weather_data['city']} saved successfully.")
@@ -62,7 +62,6 @@ def get_search_history():
     try:
         # Fetch all weather search history from the database
         history = WeatherSearchHistory.query.all()
-        # Convert query results to dictionary format if necessary
         return [entry.to_dict() for entry in history]
     except Exception as e:
         print(f"Error fetching history: {e}")

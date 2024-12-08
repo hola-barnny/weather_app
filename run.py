@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime
 import requests
-from app.utils import get_weather_data, save_weather_history, get_search_history  # Import helper functions
-from app.weather_api import get_weather_from_api  # Import weather API helper
-from app.models import WeatherSearchHistory  # Import the database model
+from app.utils import get_weather_data, save_weather_history, get_search_history 
+from app.weather_api import get_weather_from_api
+from app.models import WeatherSearchHistory
 from flask_sqlalchemy import SQLAlchemy
 import os
 
@@ -11,10 +11,10 @@ import os
 app = Flask(__name__)
 
 # Database credentials from environment variables
-DB_HOST = os.getenv('DB_HOST', 'localhost')  # Default to localhost
-DB_USER = os.getenv('DB_USER', 'root')  # Default to root
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'JasonZoe@1985')  # Use your password
-DB_NAME = os.getenv('DB_NAME', 'weatherapp_db')  # Default to weatherapp_db
+DB_HOST = os.getenv('DB_HOST', 'localhost') 
+DB_USER = os.getenv('DB_USER', 'root') 
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'JasonZoe@1985')
+DB_NAME = os.getenv('DB_NAME', 'weatherapp_db')
 
 # Setup SQLAlchemy for MySQL
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
