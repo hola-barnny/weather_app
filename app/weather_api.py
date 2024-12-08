@@ -10,7 +10,7 @@ def get_weather(city):
     response = requests.get(url)
     data = response.json()
     if data['cod'] != 200:
-        return None  # Handle errors if city not found or invalid
+        return None
     return {
         'temperature': data['main']['temp'],
         'humidity': data['main']['humidity'],

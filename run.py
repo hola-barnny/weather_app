@@ -1,21 +1,25 @@
+# run.py
 from flask import Flask, render_template, request, redirect, url_for
-import requests
+from app.utils import get_weather_data, save_weather_history, get_search_history  # Import functions from utils.py
+from app.weather_api import get_weather_from_api  # Import weather API helper
+from app.models import WeatherSearchHistory  # Import model if using a database
 from datetime import datetime
+import requests
 
-# Initialize the Flask app
+# Initialize Flask app
 app = Flask(__name__)
 
-# Mock database for history tracking (In a real app, you'd use a proper database)
+# Initialize the weather history storage (could be replaced with database)
 weather_history = []
 
 # Function to fetch weather data from OpenWeatherMap API
 def get_weather_data(city):
-    API_KEY = "your_openweathermap_api_key"  # Replace with your own API key
+    API_KEY = "your_openweathermap_api_key"  # Replace with your OpenWeatherMap API key
     WEATHER_API_URL = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
     response = requests.get(WEATHER_API_URL)
     data = response.json()
 
-    # Return a dictionary with weather data
+    # Return weather data in a structured format
     if response.status_code == 200:
         return {
             "temperature": data['main']['temp'],
@@ -36,7 +40,6 @@ def home():
         weather_data = get_weather_data(city)
 
         if weather_data:
-            # Save the weather data with a timestamp to the history
             weather_entry = {
                 "city": city,
                 "temperature": weather_data['temperature'],
@@ -46,30 +49,25 @@ def home():
                 "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
             weather_history.append(weather_entry)
-
-            return redirect(url_for("forecast", city=city))  # Redirect to the forecast page
+            return redirect(url_for("forecast", city=city))  # Redirect to forecast page
         else:
             error_message = "City not found or invalid. Please try again."
             return render_template("index.html", error=error_message)
 
     return render_template("index.html")
 
-# Route for the weather forecast page (forecast.html)
+# Route for weather forecast page (forecast.html)
 @app.route("/forecast")
 def forecast():
     city = request.args.get("city")
     weather_data = get_weather_data(city)
 
     if weather_data:
-        forecast_data = []  # In a real app, this could be forecast data from the API
-
-        # Add a mock forecast for demonstration purposes
         forecast_data = [
             {"date": "2024-12-08", "temperature": weather_data['temperature'] + 2, "weather": "Clear"},
             {"date": "2024-12-09", "temperature": weather_data['temperature'] - 1, "weather": "Partly cloudy"},
             {"date": "2024-12-10", "temperature": weather_data['temperature'], "weather": "Rainy"}
         ]
-
         return render_template("forecast.html", city=city, weather=weather_data, forecast=forecast_data)
     else:
         error_message = "Unable to retrieve forecast data."
@@ -87,7 +85,7 @@ def map_view():
         error_message = "City not found or invalid. Please try again."
         return render_template("index.html", error=error_message)
 
-# Route for viewing weather search history (history.html)
+# Route for weather history page (history.html)
 @app.route("/history")
 def history():
     return render_template("history.html", history=weather_history)
