@@ -3,7 +3,7 @@ from datetime import datetime
 import requests
 from app.utils import get_weather_data, save_weather_history, get_search_history 
 from app.weather_api import get_weather_from_api
-from app.models import WeatherSearchHistory
+from app.models import WeatherSearchHistory, User, Settings
 from flask_sqlalchemy import SQLAlchemy
 import os
 
