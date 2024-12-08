@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather History</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Search History</h1>
+
+        {% if history %}
+            <ul class="history-list">
+                {% for entry in history %}
+                    <li class="history-entry">
+                        <strong>{{ entry.city }}</strong> - {{ entry.date }}
+                        <div class="weather-info">
+                            <p>Temperature: {{ entry.temperature }}°C</p>
+                            <p>Weather: {{ entry.weather }}</p>
+                            <p>Humidity: {{ entry.humidity }}%</p>
+                            <img src="http://openweathermap.org/img/wn/{{ entry.icon }}@2x.png" alt="Weather Icon">
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No history available. Start searching for weather data!</p>
+        {% endif %}
+
+        <a href="/">Back to Home</a>
+    </div>
+</body>
+</html>

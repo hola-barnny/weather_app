@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Map</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Include Leaflet.js library -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather Map</h1>
+        <h2>Weather data for {{ city | safe }}</h2>
+
+        <!-- Map container -->
+        <div id="weather-map" style="height: 500px; margin-bottom: 20px;"></div>
+
+        <!-- Weather details -->
+        <div class="weather-details">
+            <p><strong>Current Temperature:</strong> {{ weather['temperature'] | default(0) }}°C</p>
+            <p><strong>Weather:</strong> {{ weather['weather'] | safe }}</p>
+            <p><strong>Humidity:</strong> {{ weather['humidity'] | default(0) }}%</p>
+            <img src="http://openweathermap.org/img/wn/{{ weather['icon'] }}@2x.png" alt="Weather Icon" style="width: 100px;">
+        </div>
+
+        <a href="/" class="btn">Back to Home</a>
+    </div>
+
+    <!-- JavaScript to initialize the map -->
+    <script>
+        // Safely handle Flask template variables for JavaScript
+        const city = "{{ city | safe }}";
+        const latitude = parseFloat("{{ weather['latitude'] | default(0, true) | safe }}");
+        const longitude = parseFloat("{{ weather['longitude'] | default(0, true) | safe }}");
+        const temperature = parseFloat("{{ weather['temperature'] | default(0, true) | safe }}");
+        const weatherDescription = "{{ weather['weather'] | safe }}";
+        const humidity = parseInt("{{ weather['humidity'] | default(0, true) | safe }}");
+
+        // Initialize the map centered at the weather location
+        var map = L.map('weather-map').setView([latitude, longitude], 10);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Add a marker for the city location
+        var marker = L.marker([latitude, longitude]).addTo(map);
+        marker.bindPopup(`
+            <b>${city}</b><br>
+            <strong>Weather:</strong> ${weatherDescription}<br>
+            <strong>Temperature:</strong> ${temperature}°C<br>
+            <strong>Humidity:</strong> ${humidity}%
+        `).openPopup();
+    </script>
+</body>
+</html>

@@ -1,25 +1,38 @@
-<!-- app/templates/forecast.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forecast</title>
+    <title>Weather Forecast</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>Weather Forecast</h1>
-        <h2>{{ weather['temperature'] }}°C - {{ weather['weather'] }}</h2>
-        <p>Humidity: {{ weather['humidity'] }}%</p>
-        <img src="http://openweathermap.org/img/wn/{{ weather['icon'] }}@2x.png" alt="Weather Icon">
-        <h3>Forecast</h3>
-        <ul>
+        <header>
+            <button id="toggle-dark-mode">Toggle Dark Mode</button>
+        </header>
+
+        <h1>Weather Forecast for {{ weather['city'] }}</h1>
+        <div class="weather-container">
+            <h2>{{ weather['temperature'] }}°C - {{ weather['weather'] }}</h2>
+            <p>Humidity: {{ weather['humidity'] }}%</p>
+            <img src="http://openweathermap.org/img/wn/{{ weather['icon'] }}@2x.png" alt="Weather Icon">
+        </div>
+
+        <h3>5-Day Forecast</h3>
+        <ul class="forecast-list">
             {% for day in forecast %}
-                <li>{{ day.date }}: {{ day.temperature }}°C - {{ day.weather }}</li>
+                <li>
+                    <span>{{ day.date }}:</span> 
+                    <span>{{ day.temperature }}°C - {{ day.weather }}</span>
+                </li>
             {% endfor %}
         </ul>
+
         <a href="/">Back to Home</a>
     </div>
+
+    <!-- Link to the JavaScript file -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>
