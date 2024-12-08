@@ -9,10 +9,12 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration."""
     FLASK_ENV = 'development'  # Set the environment to 'development'
-    DATABASE_URI = os.environ.get("DATABASE_URI", "sqlite:///dev.db")  # Set up the database URI (e.g., SQLite for dev)
+    DATABASE_URI = os.environ.get("DATABASE_URI", "mysql+pymysql://root:your_password@localhost/weatherapp_db")  # MySQL URI for dev
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # Disable Flask-SQLAlchemy modification tracking for performance reasons
 
 class ProductionConfig(Config):
     """Production configuration."""
     FLASK_ENV = 'production'  # Set the environment to 'production'
-    DATABASE_URI = os.environ.get("DATABASE_URI", "sqlite:///prod.db")  # Database URI for production (can be replaced with PostgreSQL, etc.)
+    DATABASE_URI = os.environ.get("DATABASE_URI", "mysql+pymysql://root:your_password@localhost/weatherapp_db")  # MySQL URI for prod
+    SQLALCHEMY_TRACK_MODIFICATIONS = False  # Disable Flask-SQLAlchemy modification tracking
     DEBUG = False  # Disable debug mode in production

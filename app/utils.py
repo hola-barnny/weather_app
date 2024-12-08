@@ -67,4 +67,3 @@ def get_search_history():
     except Exception as e:
         print(f"Error fetching history: {e}")
         return []
-
