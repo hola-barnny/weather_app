@@ -1,15 +1,30 @@
-# app/__init__.py
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
+import os
 
-# Initialize the Flask app
-app = Flask(__name__)
+db = SQLAlchemy()
 
-# Load configuration from config.py
-app.config.from_object('config.Config')
+def create_app():
+    load_dotenv()  # Load environment variables
 
-# Initialize the SQLAlchemy database object
-db = SQLAlchemy(app)
+    app = Flask(__name__)
 
-# Import routes after initializing the app and db
-from app import routes
+    # App configuration
+    app.config['SQLALCHEMY_DATABASE_URI'] = (
+        f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
+        f"@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+    )
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    db.init_app(app)
+
+    # Register blueprints/routes
+    from app.routes import main
+    app.register_blueprint(main)
+
+    # Create database tables
+    with app.app_context():
+        db.create_all()
+
+    return app

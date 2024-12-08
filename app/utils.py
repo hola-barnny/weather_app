@@ -1,6 +1,8 @@
 import requests
 from app.models import db, WeatherSearchHistory
 from datetime import datetime
+from app import db
+import os
 
 # Function to fetch weather data from OpenWeatherMap API
 def get_weather_data(city):
