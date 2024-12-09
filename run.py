@@ -1,59 +1,30 @@
 from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime
-import requests
-from app.utils import get_weather_data, save_weather_history, get_search_history 
-from app.weather_api import get_weather_from_api
-from app.models import WeatherSearchHistory, User, Settings
+from app.weather_api import get_weather 
+from app.utils import save_weather_history, get_search_history 
+from app.models import WeatherSearchHistory
 from flask_sqlalchemy import SQLAlchemy
 import os
 from app import app, db
 from flask_migrate import Migrate
 
-
 # Initialize the Flask app
 app = Flask(__name__)
-
-# Database credentials from environment variables
-DB_HOST = os.getenv('DB_HOST', 'localhost') 
-DB_USER = os.getenv('DB_USER', 'root') 
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'JasonZoe@1985')
-DB_NAME = os.getenv('DB_NAME', 'weatherapp_db')
-
 
 # Configure SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:JasonZoe@1985@localhost/weatherapp_db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize SQLAlchemy
+# Initialize SQLAlchemy and Migrate
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
-
-# Function to fetch weather data from OpenWeatherMap API
-def get_weather_data(city):
-    API_KEY = "your_openweathermap_api_key"  # Replace with your OpenWeatherMap API key
-    WEATHER_API_URL = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-    response = requests.get(WEATHER_API_URL)
-    data = response.json()
-
-    # Return weather data in a structured format
-    if response.status_code == 200:
-        return {
-            "temperature": data['main']['temp'],
-            "weather": data['weather'][0]['description'],
-            "humidity": data['main']['humidity'],
-            "icon": data['weather'][0]['icon'],
-            "latitude": data['coord']['lat'],
-            "longitude": data['coord']['lon']
-        }
-    else:
-        return None
 
 # Route for the home page (index.html)
 @app.route("/", methods=["POST", "GET"])
 def home():
     if request.method == "POST":
         city = request.form.get("city")
-        weather_data = get_weather_data(city)
+        weather_data = get_weather(city)
 
         if weather_data:
             weather_entry = {
@@ -78,7 +49,7 @@ def home():
 @app.route("/forecast")
 def forecast():
     city = request.args.get("city")
-    weather_data = get_weather_data(city)
+    weather_data = get_weather(city)
 
     if weather_data:
         # Mock forecast data (you would get actual forecast from an API in a real application)
@@ -92,22 +63,10 @@ def forecast():
         error_message = "Unable to retrieve forecast data."
         return render_template("index.html", error=error_message)
 
-# Route for the weather map page (map.html)
-@app.route("/map")
-def map_view():
-    city = request.args.get("city")
-    weather_data = get_weather_data(city)
-
-    if weather_data:
-        return render_template("map.html", city=city, weather=weather_data)
-    else:
-        error_message = "City not found or invalid. Please try again."
-        return render_template("index.html", error=error_message)
-
 # Route for the weather history page (history.html)
 @app.route("/history")
 def history():
-    history = get_search_history()  # Fetch search history from the database
+    history = get_search_history()
     return render_template("history.html", history=history)
 
 # Function to save weather search history to the database
