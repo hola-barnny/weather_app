@@ -1,21 +1,26 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from datetime import datetime
-from app.weather_api import get_weather 
-from app.utils import save_weather_history, get_search_history 
+from app.weather_api import get_weather
+from app.utils import save_weather_history, get_search_history
 from app.models import WeatherSearchHistory
 from flask_sqlalchemy import SQLAlchemy
-import os
-from app import app, db
 from flask_migrate import Migrate
+import os
 
 # Initialize the Flask app
 app = Flask(__name__)
 
+# Database credentials from environment variables
+DB_HOST = os.getenv('DB_HOST', 'localhost')
+DB_USER = os.getenv('DB_USER', 'root')
+DB_PASSWORD = os.getenv('DB_PASSWORD', 'JasonZoe@1985')
+DB_NAME = os.getenv('DB_NAME', 'weatherapp_db')
+
 # Configure SQLAlchemy
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:JasonZoe@1985@localhost/weatherapp_db"
+app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize SQLAlchemy and Migrate
+# Initialize SQLAlchemy and Flask-Migrate
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -35,8 +40,6 @@ def home():
                 "icon": weather_data['icon'],
                 "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
-
-            # Save weather entry to the database
             save_weather_history(weather_entry)
             return redirect(url_for("forecast", city=city))
         else:
@@ -52,7 +55,7 @@ def forecast():
     weather_data = get_weather(city)
 
     if weather_data:
-        # Mock forecast data (you would get actual forecast from an API in a real application)
+        # Fetch a mock forecast (in real case, replace with actual API call)
         forecast_data = [
             {"date": "2024-12-08", "temperature": weather_data['temperature'] + 2, "weather": "Clear"},
             {"date": "2024-12-09", "temperature": weather_data['temperature'] - 1, "weather": "Partly cloudy"},
@@ -63,11 +66,31 @@ def forecast():
         error_message = "Unable to retrieve forecast data."
         return render_template("index.html", error=error_message)
 
+# Route for the weather map page (map.html)
+@app.route("/map")
+def map_view():
+    city = request.args.get("city")
+    weather_data = get_weather(city)
+
+    if weather_data:
+        return render_template("map.html", city=city, weather=weather_data)
+    else:
+        error_message = "City not found or invalid. Please try again."
+        return render_template("index.html", error=error_message)
+
 # Route for the weather history page (history.html)
 @app.route("/history")
 def history():
-    history = get_search_history()
+    history = get_search_history()  # Fetch search history from the database
     return render_template("history.html", history=history)
+
+# Route for the weather search history page (optional)
+@app.route("/delete_history", methods=["POST"])
+def delete_history():
+    city_to_delete = request.form.get("city")
+    WeatherSearchHistory.query.filter_by(city=city_to_delete).delete()
+    db.session.commit()
+    return redirect(url_for("history"))
 
 # Function to save weather search history to the database
 def save_weather_history(weather_data):
@@ -89,6 +112,7 @@ def get_search_history():
 
 # Run the Flask app
 if __name__ == "__main__":
+    # Ensure the app is initialized properly
     with app.app_context():
-        db.create_all()
+        db.create_all()  # This will create the tables if they don't exist
     app.run(debug=True)
