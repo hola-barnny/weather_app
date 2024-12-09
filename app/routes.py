@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .weather_api import get_weather_data, get_forecast_data
 from datetime import datetime
 
@@ -8,9 +8,8 @@ main = Blueprint("main", __name__)
 # In-memory storage for weather history (for demonstration purposes)
 weather_history = []
 
-
 @main.route("/")
-def home():
+def index():
     """
     Renders the home page for the Weather App.
     Allows users to input a city to fetch weather details.
@@ -26,23 +25,25 @@ def fetch_weather():
     """
     city = request.form.get("city")
     if not city:
-        return render_template("index.html", error="City name is required.")
+        flash("City name is required.", "error")
+        return redirect(url_for("main.index"))
 
     # Fetch weather data from the API
     weather_data = get_weather_data(city)
 
     if "error" in weather_data:
-        return render_template("index.html", error=weather_data["error"])
+        flash(weather_data["error"], "error")
+        return redirect(url_for("main.index"))
 
     # Store the weather data in the history with a timestamp
     weather_entry = {
         "city": city,
-        "temperature": weather_data["temperature"],
-        "weather": weather_data["weather"],
-        "humidity": weather_data["humidity"],
-        "icon": weather_data["icon"],
-        "latitude": weather_data["latitude"],
-        "longitude": weather_data["longitude"],
+        "temperature": weather_data.get("temperature"),
+        "weather": weather_data.get("weather"),
+        "humidity": weather_data.get("humidity"),
+        "icon": weather_data.get("icon"),
+        "latitude": weather_data.get("latitude"),
+        "longitude": weather_data.get("longitude"),
         "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
     }
     weather_history.append(weather_entry)
@@ -58,12 +59,13 @@ def forecast():
     """
     city = request.args.get("city")
     if not city:
-        return redirect(url_for("main.home"))
+        return redirect(url_for("main.index"))
 
     # Fetch current weather and forecast data
     weather_data = get_weather_data(city)
     if "error" in weather_data:
-        return render_template("index.html", error=weather_data["error"])
+        flash(weather_data["error"], "error")
+        return redirect(url_for("main.index"))
 
     forecast_data = get_forecast_data(city)
     return render_template("forecast.html", weather=weather_data, forecast=forecast_data)
@@ -84,11 +86,12 @@ def map_view():
     """
     city = request.args.get("city")
     if not city:
-        return redirect(url_for("main.home"))
+        return redirect(url_for("main.index"))
 
     # Fetch weather data for map view
     weather_data = get_weather_data(city)
     if "error" in weather_data:
-        return render_template("index.html", error=weather_data["error"])
+        flash(weather_data["error"], "error")
+        return redirect(url_for("main.index"))
 
     return render_template("map.html", city=city, weather=weather_data)
