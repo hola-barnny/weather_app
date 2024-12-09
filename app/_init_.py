@@ -7,16 +7,16 @@ import os
 db = SQLAlchemy()
 
 def create_app():
-    # Load environment variables from a .env file
+    # Load environment variables
     load_dotenv()
 
-    # Create Flask app instance
+    # Initialize the Flask app
     app = Flask(__name__)
 
     # App configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = (
-        f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
-        f"@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
+        f"mysql+pymysql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@"
+        f"{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
     )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -24,10 +24,10 @@ def create_app():
     db.init_app(app)
 
     # Register blueprints or routes
-    from app.routes import main  # Import blueprint or routes
+    from app.routes import main
     app.register_blueprint(main)
 
-    # Create database tables (optional for development)
+    # Create database tables
     with app.app_context():
         db.create_all()
 

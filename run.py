@@ -6,6 +6,9 @@ from app.weather_api import get_weather_from_api
 from app.models import WeatherSearchHistory, User, Settings
 from flask_sqlalchemy import SQLAlchemy
 import os
+from app import app, db
+from flask_migrate import Migrate
+
 
 # Initialize the Flask app
 app = Flask(__name__)
@@ -16,12 +19,14 @@ DB_USER = os.getenv('DB_USER', 'root')
 DB_PASSWORD = os.getenv('DB_PASSWORD', 'JasonZoe@1985')
 DB_NAME = os.getenv('DB_NAME', 'weatherapp_db')
 
-# Setup SQLAlchemy for MySQL
-app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+
+# Configure SQLAlchemy
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:JasonZoe@1985@localhost/weatherapp_db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize SQLAlchemy
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 # Function to fetch weather data from OpenWeatherMap API
 def get_weather_data(city):
@@ -61,8 +66,8 @@ def home():
             }
 
             # Save weather entry to the database
-            save_weather_history(weather_entry)  # Save to database
-            return redirect(url_for("forecast", city=city))  # Redirect to forecast page
+            save_weather_history(weather_entry)
+            return redirect(url_for("forecast", city=city))
         else:
             error_message = "City not found or invalid. Please try again."
             return render_template("index.html", error=error_message)
@@ -126,5 +131,5 @@ def get_search_history():
 # Run the Flask app
 if __name__ == "__main__":
     with app.app_context():
-        db.create_all()  # Create the database tables if they do not exist
+        db.create_all()
     app.run(debug=True)

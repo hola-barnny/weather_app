@@ -1,7 +1,5 @@
 import requests
-from app.models import db, WeatherSearchHistory
 from datetime import datetime
-from app import db
 import os
 
 # Function to fetch weather data from OpenWeatherMap API
@@ -39,7 +37,10 @@ def get_weather_data(city):
 # Function to save search history into the database
 def save_weather_history(weather_data):
     try:
-        
+        # Delay imports to avoid circular dependency issues
+        from app import db
+        from app.models import WeatherSearchHistory
+
         history_entry = WeatherSearchHistory(
             city=weather_data['city'],
             temperature=weather_data['temperature'],
@@ -51,7 +52,7 @@ def save_weather_history(weather_data):
             date=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
         
-            # Save the entry to the database
+        # Save the entry to the database
         db.session.add(history_entry)
         db.session.commit()
         print(f"Weather history for {weather_data['city']} saved successfully.")
@@ -62,6 +63,9 @@ def save_weather_history(weather_data):
 # Function to retrieve search history from the database
 def get_search_history():
     try:
+        # Delay imports to avoid circular dependency issues
+        from app.models import WeatherSearchHistory
+
         # Fetch all weather search history from the database
         history = WeatherSearchHistory.query.all()
         return [entry.to_dict() for entry in history]
