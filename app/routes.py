@@ -1,12 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .weather_api import get_weather_data, get_forecast_data
 from datetime import datetime
+from app.models import WeatherSearchHistory
+from app import db
 
 # Define the blueprint for main routes
 main = Blueprint("main", __name__)
-
-# In-memory storage for weather history (for demonstration purposes)
-weather_history = []
 
 @main.route("/")
 def index():
@@ -35,18 +34,20 @@ def fetch_weather():
         flash(weather_data["error"], "error")
         return redirect(url_for("main.index"))
 
-    # Store the weather data in the history with a timestamp
-    weather_entry = {
-        "city": city,
-        "temperature": weather_data.get("temperature"),
-        "weather": weather_data.get("weather"),
-        "humidity": weather_data.get("humidity"),
-        "icon": weather_data.get("icon"),
-        "latitude": weather_data.get("latitude"),
-        "longitude": weather_data.get("longitude"),
-        "date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-    }
-    weather_history.append(weather_entry)
+    # Store the weather data in the history with a timestamp in the database
+    weather_entry = WeatherSearchHistory(
+        city=city,
+        temperature=weather_data.get("temperature"),
+        weather=weather_data.get("weather"),
+        humidity=weather_data.get("humidity"),
+        icon=weather_data.get("icon"),
+        latitude=weather_data.get("latitude"),
+        longitude=weather_data.get("longitude"),
+        date=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    )
+    
+    db.session.add(weather_entry)
+    db.session.commit()
 
     # Redirect to the forecast page with the city as a query parameter
     return redirect(url_for("main.forecast", city=city))
@@ -74,24 +75,19 @@ def forecast():
 @main.route("/history")
 def history():
     """
-    Displays the session's historical weather data.
+    Displays the session's historical weather data from the database.
     """
-    return render_template("history.html", history=weather_history)
+    search_history = WeatherSearchHistory.query.all()
+    return render_template("history.html", history=search_history)
 
 
-@main.route("/map")
-def map_view():
+@main.route("/delete_history", methods=["POST"])
+def delete_history():
     """
-    Displays an interactive map for the specified city's weather conditions.
+    Deletes a city from the weather search history.
     """
-    city = request.args.get("city")
-    if not city:
-        return redirect(url_for("main.index"))
-
-    # Fetch weather data for map view
-    weather_data = get_weather_data(city)
-    if "error" in weather_data:
-        flash(weather_data["error"], "error")
-        return redirect(url_for("main.index"))
-
-    return render_template("map.html", city=city, weather=weather_data)
+    city_to_delete = request.form.get("city")
+    if city_to_delete:
+        WeatherSearchHistory.query.filter_by(city=city_to_delete).delete()
+        db.session.commit()
+    return redirect(url_for("main.history"))
