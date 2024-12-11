@@ -5,6 +5,20 @@ from app import create_app, db
 from app.models import WeatherSearchHistory
 from flask_migrate import Migrate
 import os
+from dotenv import load_dotenv
+import ast
+
+# Load environment variables from the .env file
+load_dotenv()
+
+# Get the SESSION_SECRET from environment variables
+session_secret_str = os.getenv("SESSION_SECRET")
+
+# Convert the string representation of the byte string back to a real byte string
+session_secret = ast.literal_eval(session_secret_str)
+
+# Now `session_secret` is a byte string
+print(session_secret)
 
 # Create the app instance using the factory function
 app = create_app()
