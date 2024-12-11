@@ -9,12 +9,14 @@ class Config:
 class DevelopmentConfig(Config):
     """Development configuration."""
     FLASK_ENV = 'development'
-    DATABASE_URI = os.environ.get("DATABASE_URI", "mysql+pymysql://root:JasonZoe@1985@localhost/weatherapp_db")
+    # Include the correct DATABASE_URI here
+    DATABASE_URI = os.environ.get("DATABASE_URI", "mysql+pymysql://root:JasonZoe%401985@localhost:3306/weatherapp_db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 class ProductionConfig(Config):
     """Production configuration."""
     FLASK_ENV = 'production'
-    DATABASE_URI = os.environ.get("DATABASE_URI", "mysql+pymysql://root:JasonZoe@1985@localhost/weatherapp_db")
-    SQLALCHEMY_TRACK_MODIFICATIONS = False  # Disable Flask-SQLAlchemy modification tracking
+    # Include the correct DATABASE_URI here
+    DATABASE_URI = os.environ.get("DATABASE_URI", "mysql+pymysql://root:JasonZoe%401985@localhost:3306/weatherapp_db")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     DEBUG = False

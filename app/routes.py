@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .weather_api import get_weather_data, get_forecast_data
 from datetime import datetime
-from app.models import WeatherSearchHistory
+from .models import WeatherSearchHistory
 from app import db
 
 # Define the blueprint for main routes
