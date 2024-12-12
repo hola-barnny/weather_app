@@ -1,6 +1,6 @@
-from flask import Flask, redirect, render_template, request, url_for 
+from flask import Flask, redirect, render_template, request, url_for
 from datetime import datetime
-from app.weather_api import get_weather_data, get_forecast_data  # Import get_forecast_data here
+from app.weather_api import get_weather_data_by_city, get_forecast_data
 from app import create_app, db
 from app.models import WeatherSearchHistory
 from flask_migrate import Migrate
@@ -66,7 +66,7 @@ def home():
         if not city:
             return render_template("index.html", error="City name is required.")
 
-        weather_data = get_weather_data(city, api_key)
+        weather_data = get_weather_data_by_city(city, api_key)
         if weather_data:
             weather_entry = {
                 "city": city,
@@ -90,7 +90,7 @@ def forecast():
     if not city:
         return redirect(url_for("home"))
 
-    weather_data = get_weather_data(city, api_key)
+    weather_data = get_weather_data_by_city(city, api_key)
     if weather_data:
         # Fetch forecast data (this now works because get_forecast_data is imported)
         forecast_data = get_forecast_data(city)  # Note that this is now correctly referenced
@@ -105,7 +105,7 @@ def map_view():
     if not city:
         return redirect(url_for("home"))
 
-    weather_data = get_weather_data(city, api_key)
+    weather_data = get_weather_data_by_city(city, api_key)
     if weather_data:
         return render_template("map.html", city=city, weather=weather_data)
     else:

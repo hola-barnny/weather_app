@@ -1,101 +1,80 @@
-import requests
-from config import Config
+import os
 import logging
-
-# Fetch API key from config
-API_KEY = Config.WEATHER_API_KEY
-BASE_URL = 'http://api.openweathermap.org/data/2.5/'
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_weather_data_by_city(city):
+
+class Config:
+    """Base configuration class with common settings."""
+
+    # Load environment variables with fallback values
+    SECRET_KEY = os.getenv("SECRET_KEY", "default_secret_key_for_dev")
+    WEATHER_API_KEY = os.getenv("WEATHER_API_KEY", "default_weather_api_key")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Database URI (fallback to a local dev environment)
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URI", "mysql+pymysql://root:password@localhost:3306/weatherapp_db"
+    )
+
+    @staticmethod
+    def check_environment_variable(variable_name):
+        """
+        Logs a warning if the environment variable is not set.
+        :param variable_name: Name of the environment variable.
+        :return: Value of the environment variable or None.
+        """
+        variable_value = os.getenv(variable_name)
+        if not variable_value:
+            logger.warning(f"Environment variable {variable_name} is not set.")
+        return variable_value
+
+    # Check critical environment variables
+    @classmethod
+    def validate_critical_env_vars(cls):
+        """Validates critical environment variables and logs warnings if unset."""
+        cls.check_environment_variable("SECRET_KEY")
+        cls.check_environment_variable("WEATHER_API_KEY")
+        cls.check_environment_variable("DATABASE_URI")
+
+
+class DevelopmentConfig(Config):
+    """Development configuration."""
+    FLASK_ENV = 'development'
+    DEBUG = True
+
+    # Overwrite the database URI for development if available
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URI", "mysql+pymysql://root:password@localhost:3306/dev_weatherapp_db"
+    )
+
+
+class ProductionConfig(Config):
+    """Production configuration."""
+    FLASK_ENV = 'production'
+    DEBUG = False
+
+    # Overwrite the database URI for production if available
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URI", "mysql+pymysql://root:password@prod-db-server:3306/prod_weatherapp_db"
+    )
+
+
+def get_config():
     """
-    Fetches the current weather data for a city from OpenWeatherMap using city name.
-    :param city: Name of the city to fetch the weather for.
-    :return: A dictionary containing weather details or an error message.
+    Returns the appropriate configuration class based on the NODE_ENV environment variable.
+    Defaults to DevelopmentConfig if NODE_ENV is not set or invalid.
+    :return: Configuration class.
     """
-    url = f"{BASE_URL}weather?q={city}&appid={API_KEY}&units=metric"
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
+    env = os.getenv("NODE_ENV", "development").lower()
+    if env == "production":
+        logger.info("Using ProductionConfig.")
+        return ProductionConfig
+    logger.info("Using DevelopmentConfig.")
+    return DevelopmentConfig
 
-        if data.get('cod') != 200:
-            logger.error(f"Failed to fetch weather data: {data.get('message')}")
-            return {"error": data.get("message", "Unknown error occurred.")}
 
-        return {
-            'city': data['name'],
-            'temperature': data['main']['temp'],
-            'humidity': data['main']['humidity'],
-            'weather': data['weather'][0]['description'],
-            'icon': data['weather'][0]['icon'],
-            'latitude': data['coord']['lat'],
-            'longitude': data['coord']['lon']
-        }
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching weather data: {e}")
-        return {"error": "Unable to fetch weather data at this time."}
-
-def get_weather_data_by_coordinates(latitude, longitude):
-    """
-    Fetches the current weather data using latitude and longitude coordinates from OpenWeatherMap.
-    :param latitude: Latitude of the location.
-    :param longitude: Longitude of the location.
-    :return: A dictionary containing weather details or an error message.
-    """
-    url = f"{BASE_URL}weather?lat={latitude}&lon={longitude}&appid={API_KEY}&units=metric"
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
-
-        if data.get('cod') != 200:
-            logger.error(f"Failed to fetch weather data: {data.get('message')}")
-            return {"error": data.get("message", "Unknown error occurred.")}
-
-        return {
-            'latitude': data['coord']['lat'],
-            'longitude': data['coord']['lon'],
-            'temperature': data['main']['temp'],
-            'humidity': data['main']['humidity'],
-            'weather': data['weather'][0]['description'],
-            'icon': data['weather'][0]['icon'],
-            'city': data['name']
-        }
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching weather data: {e}")
-        return {"error": "Unable to fetch weather data at this time."}
-
-def get_forecast_data(city):
-    """
-    Fetches the 5-day weather forecast data for a city from OpenWeatherMap using city name.
-    :param city: Name of the city to fetch the forecast for.
-    :return: A list of forecast dictionaries or an error message.
-    """
-    url = f"{BASE_URL}forecast?q={city}&appid={API_KEY}&units=metric"
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        forecast_data = response.json()
-
-        if forecast_data.get('cod') != '200':
-            logger.error(f"Failed to fetch forecast data: {forecast_data.get('message')}")
-            return {"error": forecast_data.get("message", "Unknown error occurred.")}
-
-        # Prepare the forecast list with the necessary data
-        forecast_list = [
-            {
-                'date': item['dt_txt'],
-                'temperature': item['main']['temp'],
-                'weather': item['weather'][0]['description'],
-                'icon': item['weather'][0]['icon']
-            }
-            for item in forecast_data['list']
-        ]
-        return forecast_list
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching forecast data: {e}")
-        return {"error": "Unable to fetch forecast data at this time."}
+# Validate critical environment variables at module load
+Config.validate_critical_env_vars()
