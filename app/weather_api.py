@@ -2,6 +2,7 @@ import requests
 from config import Config
 import logging
 
+# Fetch API key from config
 API_KEY = Config.WEATHER_API_KEY
 BASE_URL = 'http://api.openweathermap.org/data/2.5/'
 
@@ -87,10 +88,10 @@ def get_forecast_data(city):
         # Prepare the forecast list with the necessary data
         forecast_list = [
             {
-                'date': item['dt_txt'],  # Timestamp of the forecast
-                'temperature': item['main']['temp'],  # Temperature in Celsius
-                'weather': item['weather'][0]['description'],  # Weather description
-                'icon': item['weather'][0]['icon']  # Weather icon
+                'date': item['dt_txt'],
+                'temperature': item['main']['temp'],
+                'weather': item['weather'][0]['description'],
+                'icon': item['weather'][0]['icon']
             }
             for item in forecast_data['list']
         ]

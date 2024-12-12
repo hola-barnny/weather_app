@@ -1,3 +1,5 @@
+# app/routes.py
+
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .weather_api import get_weather_data, get_forecast_data
 from datetime import datetime
@@ -6,6 +8,22 @@ from app import db
 
 # Define the blueprint for main routes
 main = Blueprint("main", __name__)
+
+# Helper function to fetch weather data
+def fetch_weather_data(city):
+    """
+    Fetch weather and forecast data for a given city.
+    Returns weather data and forecast data, or error message if any.
+    """
+    weather_data = get_weather_data(city)
+    if "error" in weather_data:
+        return None, weather_data["error"]
+
+    forecast_data = get_forecast_data(city)
+    if "error" in forecast_data:
+        return None, forecast_data["error"]
+
+    return weather_data, forecast_data
 
 @main.route("/")
 def index():
@@ -27,11 +45,11 @@ def fetch_weather():
         flash("City name is required.", "error")
         return redirect(url_for("main.index"))
 
-    # Fetch weather data from the API
-    weather_data = get_weather_data(city)
+    # Fetch weather data
+    weather_data, error = fetch_weather_data(city)
 
-    if "error" in weather_data:
-        flash(weather_data["error"], "error")
+    if error:
+        flash(error, "error")
         return redirect(url_for("main.index"))
 
     # Store the weather data in the history with a timestamp in the database
@@ -63,13 +81,12 @@ def forecast():
         return redirect(url_for("main.index"))
 
     # Fetch current weather and forecast data
-    weather_data = get_weather_data(city)
-    if "error" in weather_data:
-        flash(weather_data["error"], "error")
+    weather_data, error = fetch_weather_data(city)
+    if error:
+        flash(error, "error")
         return redirect(url_for("main.index"))
 
-    forecast_data = get_forecast_data(city)
-    return render_template("forecast.html", weather=weather_data, forecast=forecast_data)
+    return render_template("forecast.html", weather=weather_data, forecast=weather_data[1])
 
 
 @main.route("/history")

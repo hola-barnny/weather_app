@@ -3,12 +3,12 @@ import os
 class Config:
     """Base configuration class with common settings."""
     
-    # Environment variables
-    SECRET_KEY = os.getenv("SECRET_KEY")
-    WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")  # API key for OpenWeatherMap
+    # Environment variables with fallback for critical ones, but warn if not set
+    SECRET_KEY = os.getenv("SECRET_KEY", "default_secret_key_for_dev") 
+    WEATHER_API_KEY = os.getenv("WEATHER_API_KEY", "default_weather_api_key")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Database URI
+    # Database URI (use defaults for local dev environment)
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URI", "mysql+pymysql://root:password@localhost:3306/weatherapp_db"
     )
@@ -23,16 +23,17 @@ class Config:
 
     # Check critical environment variables
     check_environment_variable("SECRET_KEY")
-    check_environment_variable("WEATHER_API_KEY")  # Ensure WEATHER_API_KEY is set
+    check_environment_variable("WEATHER_API_KEY")
     check_environment_variable("DATABASE_URI")
+
 
 class DevelopmentConfig(Config):
     """Development configuration."""
     FLASK_ENV = 'development'
     DEBUG = True
-    
+
     SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URI",
+        "DATABASE_URI", 
         "mysql+pymysql://dev_user:dev_password@localhost:3306/dev_weatherapp_db"
     )
 
