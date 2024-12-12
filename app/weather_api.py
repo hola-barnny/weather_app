@@ -4,7 +4,7 @@ import logging
 
 # Fetch API key from config
 API_KEY = Config.WEATHER_API_KEY
-BASE_URL = 'http://api.openweathermap.org/data/2.5/'
+BASE_URL = 'http://api.openweathermap.org/data/2.5/weather'
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
