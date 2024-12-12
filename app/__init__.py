@@ -29,7 +29,7 @@ def create_app():
     migrate.init_app(app, db)
 
     # Register blueprints or routes
-    from .routes import main  # Ensure the blueprint 'main' is correctly defined in routes.py
+    from .routes import main
     app.register_blueprint(main)
 
     return app
