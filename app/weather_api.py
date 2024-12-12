@@ -16,7 +16,7 @@ def get_weather_data_by_city(city):
     :param city: Name of the city to fetch the weather for.
     :return: A dictionary containing weather details or an error message.
     """
-    url = f"{BASE_URL}weather?q={city}&appid={API_KEY}&units=metric"  # Corrected URL formatting
+    url = f"{BASE_URL}weather?q={city}&appid={API_KEY}&units=metric"
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -45,7 +45,7 @@ def get_forecast_data(city):
     :param city: Name of the city to fetch the forecast for.
     :return: A list of forecast dictionaries or an error message.
     """
-    url = f"{BASE_URL}forecast?q={city}&appid={API_KEY}&units=metric"  # Corrected URL formatting
+    url = f"{BASE_URL}forecast?q={city}&appid={API_KEY}&units=metric"
     try:
         response = requests.get(url)
         response.raise_for_status()
