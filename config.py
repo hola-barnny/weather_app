@@ -2,37 +2,46 @@ import os
 
 class Config:
     """Base configuration class with common settings."""
-    SECRET_KEY = os.environ.get("SECRET_KEY", "9c3b1ae7db8fd4617ca6317f7ef32bda969e2754ce220115430bcdb7a90bbbf0")
-    WEATHER_API_KEY = os.environ.get("WEATHER_API_KEY", "d9fea7939f24f617ce85b4327a724acc")
-    DEBUG = os.environ.get("FLASK_DEBUG", "True").lower() in ["true", "1", "yes"]
+    
+    # Environment variables
+    SECRET_KEY = os.getenv("SECRET_KEY")
+    WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    # Database URI
+    SQLALCHEMY_DATABASE_URI = os.getenv(
+        "DATABASE_URI", "mysql+pymysql://root:password@localhost:3306/weatherapp_db"
+    )
 
     @staticmethod
-    def check_environment_variable(variable_name, variable_value):
+    def check_environment_variable(variable_name):
         """Warns if the environment variable is not set."""
-        if variable_value is None:
-            print(f"Warning: Using default value for {variable_name}. Set it in your environment for security.")
+        variable_value = os.getenv(variable_name)
+        if not variable_value:
+            print(f"Warning: {variable_name} not set. Please set it in your environment for security.")
+        return variable_value
 
-    # Check important variables
-    check_environment_variable("SECRET_KEY", SECRET_KEY)
-    check_environment_variable("WEATHER_API_KEY", WEATHER_API_KEY)
-
+    # Check critical environment variables
+    check_environment_variable("SECRET_KEY")
+    check_environment_variable("WEATHER_API_KEY")
+    check_environment_variable("DATABASE_URI")
 
 class DevelopmentConfig(Config):
     """Development configuration."""
     FLASK_ENV = 'development'
-    DATABASE_URI = os.environ.get(
+    DEBUG = True
+    
+    SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URI",
         "mysql+pymysql://dev_user:dev_password@localhost:3306/dev_weatherapp_db"
     )
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-
 
 class ProductionConfig(Config):
     """Production configuration."""
     FLASK_ENV = 'production'
-    DATABASE_URI = os.environ.get(
+    DEBUG = False
+
+    SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URI",
         "mysql+pymysql://prod_user:prod_password@prod-db-server:3306/prod_weatherapp_db"
     )
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    DEBUG = False

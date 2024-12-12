@@ -6,34 +6,23 @@ from app.models import WeatherSearchHistory
 from flask_migrate import Migrate
 import os
 from dotenv import load_dotenv
-from urllib.parse import quote_plus
 import logging
 
 # Setup logging
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
 
-# Validate SESSION_SECRET
-session_secret = os.getenv("SESSION_SECRET")
-if not session_secret or len(session_secret) < 32:
-    raise ValueError("Invalid SESSION_SECRET. Ensure it's at least 32 characters long.")
+# Validate SECRET_KEY
+secret_key = os.getenv("SECRET_KEY")
+if not secret_key or len(secret_key) < 32:
+    raise ValueError("Invalid SECRET_KEY. Ensure it's at least 32 characters long.")
 
 # Create the app instance
 app = create_app()
-app.config["SECRET_KEY"] = session_secret
-
-# Configure SQLAlchemy
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "JasonZoe@1985")
-DB_NAME = os.getenv("DB_NAME", "weatherapp_db")
-DB_PASSWORD_ENCODED = quote_plus(DB_PASSWORD)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD_ENCODED}@{DB_HOST}/{DB_NAME}"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SECRET_KEY"] = secret_key
 
 # Initialize database and migration
 migrate = Migrate(app, db)
