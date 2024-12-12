@@ -17,13 +17,13 @@ load_dotenv()
 
 # Validate SECRET_KEY and API_KEY
 secret_key = os.getenv("SECRET_KEY")
-api_key = os.getenv("OPENWEATHER_API_KEY")
+api_key = os.getenv("WEATHER_API_KEY")
 if not secret_key or len(secret_key) < 32:
     logger.error("Invalid SECRET_KEY. Ensure it's at least 32 characters long.")
     raise ValueError("Invalid SECRET_KEY. Ensure it's at least 32 characters long.")
 if not api_key:
-    logger.error("Missing OPENWEATHER_API_KEY. Please check your .env file.")
-    raise ValueError("Missing OPENWEATHER_API_KEY. Please check your .env file.")
+    logger.error("Missing WEATHER_API_KEY. Please check your .env file.")
+    raise ValueError("Missing WEATHER_API_KEY. Please check your .env file.")
 
 # Create the app instance
 app = create_app()

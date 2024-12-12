@@ -1,7 +1,7 @@
 # app/routes.py
 
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from .weather_api import get_weather_data, get_forecast_data
+from .weather_api import get_weather_data_by_city, get_forecast_data
 from datetime import datetime
 from .models import WeatherSearchHistory
 from app import db
@@ -15,10 +15,12 @@ def fetch_weather_data(city):
     Fetch weather and forecast data for a given city.
     Returns weather data and forecast data, or error message if any.
     """
-    weather_data = get_weather_data(city)
+    # Fetch current weather data
+    weather_data = get_weather_data_by_city(city)
     if "error" in weather_data:
         return None, weather_data["error"]
 
+    # Fetch forecast data
     forecast_data = get_forecast_data(city)
     if "error" in forecast_data:
         return None, forecast_data["error"]
@@ -46,10 +48,10 @@ def fetch_weather():
         return redirect(url_for("main.index"))
 
     # Fetch weather data
-    weather_data, error = fetch_weather_data(city)
+    weather_data, forecast_data_or_error = fetch_weather_data(city)
 
-    if error:
-        flash(error, "error")
+    if not weather_data:
+        flash(forecast_data_or_error, "error")
         return redirect(url_for("main.index"))
 
     # Store the weather data in the history with a timestamp in the database
@@ -74,19 +76,19 @@ def fetch_weather():
 @main.route("/forecast")
 def forecast():
     """
-    Displays the current weather and a 3-day forecast for the specified city.
+    Displays the current weather and a 5-day forecast for the specified city.
     """
     city = request.args.get("city")
     if not city:
         return redirect(url_for("main.index"))
 
     # Fetch current weather and forecast data
-    weather_data, error = fetch_weather_data(city)
-    if error:
-        flash(error, "error")
+    weather_data, forecast_data_or_error = fetch_weather_data(city)
+    if not weather_data:
+        flash(forecast_data_or_error, "error")
         return redirect(url_for("main.index"))
 
-    return render_template("forecast.html", weather=weather_data, forecast=weather_data[1])
+    return render_template("forecast.html", weather=weather_data, forecast=forecast_data_or_error)
 
 
 @main.route("/history")
