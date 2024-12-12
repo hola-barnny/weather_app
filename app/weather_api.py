@@ -1,4 +1,3 @@
-# app/weather_api.py
 import requests
 from config import Config
 import logging
@@ -10,9 +9,9 @@ BASE_URL = 'http://api.openweathermap.org/data/2.5/'
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_weather_data(city):
+def get_weather_data_by_city(city):
     """
-    Fetches the current weather data for a city from OpenWeatherMap.
+    Fetches the current weather data for a city from OpenWeatherMap using city name.
     :param city: Name of the city to fetch the weather for.
     :return: A dictionary containing weather details or an error message.
     """
@@ -27,6 +26,7 @@ def get_weather_data(city):
             return {"error": data.get("message", "Unknown error occurred.")}
 
         return {
+            'city': data['name'],
             'temperature': data['main']['temp'],
             'humidity': data['main']['humidity'],
             'weather': data['weather'][0]['description'],
@@ -38,10 +38,39 @@ def get_weather_data(city):
         logger.error(f"Error fetching weather data: {e}")
         return {"error": "Unable to fetch weather data at this time."}
 
+def get_weather_data_by_coordinates(latitude, longitude):
+    """
+    Fetches the current weather data using latitude and longitude coordinates from OpenWeatherMap.
+    :param latitude: Latitude of the location.
+    :param longitude: Longitude of the location.
+    :return: A dictionary containing weather details or an error message.
+    """
+    url = f"{BASE_URL}weather?lat={latitude}&lon={longitude}&appid={API_KEY}&units=metric"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get('cod') != 200:
+            logger.error(f"Failed to fetch weather data: {data.get('message')}")
+            return {"error": data.get("message", "Unknown error occurred.")}
+
+        return {
+            'latitude': data['coord']['lat'],
+            'longitude': data['coord']['lon'],
+            'temperature': data['main']['temp'],
+            'humidity': data['main']['humidity'],
+            'weather': data['weather'][0]['description'],
+            'icon': data['weather'][0]['icon'],
+            'city': data['name']
+        }
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching weather data: {e}")
+        return {"error": "Unable to fetch weather data at this time."}
 
 def get_forecast_data(city):
     """
-    Fetches the 5-day weather forecast data for a city from OpenWeatherMap.
+    Fetches the 5-day weather forecast data for a city from OpenWeatherMap using city name.
     :param city: Name of the city to fetch the forecast for.
     :return: A list of forecast dictionaries or an error message.
     """
@@ -55,12 +84,13 @@ def get_forecast_data(city):
             logger.error(f"Failed to fetch forecast data: {forecast_data.get('message')}")
             return {"error": forecast_data.get("message", "Unknown error occurred.")}
 
+        # Prepare the forecast list with the necessary data
         forecast_list = [
             {
-                'date': item['dt_txt'],
-                'temperature': item['main']['temp'],
-                'weather': item['weather'][0]['description'],
-                'icon': item['weather'][0]['icon']
+                'date': item['dt_txt'],  # Timestamp of the forecast
+                'temperature': item['main']['temp'],  # Temperature in Celsius
+                'weather': item['weather'][0]['description'],  # Weather description
+                'icon': item['weather'][0]['icon']  # Weather icon
             }
             for item in forecast_data['list']
         ]

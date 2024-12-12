@@ -1,6 +1,6 @@
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, request, url_for 
 from datetime import datetime
-from app.weather_api import get_weather_data
+from app.weather_api import get_weather_data, get_forecast_data  # Import get_forecast_data here
 from app import create_app, db
 from app.models import WeatherSearchHistory
 from flask_migrate import Migrate
@@ -8,17 +8,22 @@ import os
 from dotenv import load_dotenv
 import logging
 
-# Setup logging
-logging.basicConfig(level=logging.INFO)
+# Setup logging for detailed error output
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
 
-# Validate SECRET_KEY
+# Validate SECRET_KEY and API_KEY
 secret_key = os.getenv("SECRET_KEY")
+api_key = os.getenv("OPENWEATHER_API_KEY")
 if not secret_key or len(secret_key) < 32:
+    logger.error("Invalid SECRET_KEY. Ensure it's at least 32 characters long.")
     raise ValueError("Invalid SECRET_KEY. Ensure it's at least 32 characters long.")
+if not api_key:
+    logger.error("Missing OPENWEATHER_API_KEY. Please check your .env file.")
+    raise ValueError("Missing OPENWEATHER_API_KEY. Please check your .env file.")
 
 # Create the app instance
 app = create_app()
@@ -29,16 +34,30 @@ migrate = Migrate(app, db)
 
 def save_weather_history(weather_entry):
     """Save weather data to the database."""
-    weather_record = WeatherSearchHistory(
-        city=weather_entry["city"],
-        temperature=weather_entry["temperature"],
-        weather=weather_entry["weather"],
-        humidity=weather_entry["humidity"],
-        icon=weather_entry["icon"],
-        date=weather_entry["date"]
-    )
-    db.session.add(weather_record)
-    db.session.commit()
+    try:
+        existing_record = WeatherSearchHistory.query.filter_by(city=weather_entry["city"]).first()
+        if existing_record:
+            # Update if already exists
+            existing_record.temperature = weather_entry["temperature"]
+            existing_record.weather = weather_entry["weather"]
+            existing_record.humidity = weather_entry["humidity"]
+            existing_record.icon = weather_entry["icon"]
+            existing_record.date = weather_entry["date"]
+        else:
+            # Create a new record
+            weather_record = WeatherSearchHistory(
+                city=weather_entry["city"],
+                temperature=weather_entry["temperature"],
+                weather=weather_entry["weather"],
+                humidity=weather_entry["humidity"],
+                icon=weather_entry["icon"],
+                date=weather_entry["date"]
+            )
+            db.session.add(weather_record)
+        db.session.commit()
+        logger.info(f"Weather history saved/updated for {weather_entry['city']}")
+    except Exception as e:
+        logger.error(f"Failed to save weather history: {str(e)}")
 
 @app.route("/", methods=["POST", "GET"])
 def home():
@@ -47,7 +66,7 @@ def home():
         if not city:
             return render_template("index.html", error="City name is required.")
 
-        weather_data = get_weather_data(city)
+        weather_data = get_weather_data(city, api_key)
         if weather_data:
             weather_entry = {
                 "city": city,
@@ -71,14 +90,10 @@ def forecast():
     if not city:
         return redirect(url_for("home"))
 
-    weather_data = get_weather_data(city)
+    weather_data = get_weather_data(city, api_key)
     if weather_data:
-        # Replace with API-driven forecast data
-        forecast_data = [
-            {"date": "2024-12-08", "temperature": weather_data["temperature"] + 2, "weather": "Clear"},
-            {"date": "2024-12-09", "temperature": weather_data["temperature"] - 1, "weather": "Partly cloudy"},
-            {"date": "2024-12-10", "temperature": weather_data["temperature"], "weather": "Rainy"},
-        ]
+        # Fetch forecast data (this now works because get_forecast_data is imported)
+        forecast_data = get_forecast_data(city)  # Note that this is now correctly referenced
         return render_template("forecast.html", city=city, weather=weather_data, forecast=forecast_data)
     else:
         logger.error(f"Failed to retrieve forecast for city: {city}")
@@ -90,7 +105,7 @@ def map_view():
     if not city:
         return redirect(url_for("home"))
 
-    weather_data = get_weather_data(city)
+    weather_data = get_weather_data(city, api_key)
     if weather_data:
         return render_template("map.html", city=city, weather=weather_data)
     else:
@@ -110,4 +125,4 @@ def delete_history():
     return redirect(url_for("history"))
 
 if __name__ == "__main__":
-    app.run(debug=False)
+    app.run(debug=True)

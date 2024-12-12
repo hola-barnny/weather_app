@@ -5,7 +5,7 @@ class Config:
     
     # Environment variables
     SECRET_KEY = os.getenv("SECRET_KEY")
-    WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+    WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")  # API key for OpenWeatherMap
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Database URI
@@ -23,7 +23,7 @@ class Config:
 
     # Check critical environment variables
     check_environment_variable("SECRET_KEY")
-    check_environment_variable("WEATHER_API_KEY")
+    check_environment_variable("WEATHER_API_KEY")  # Ensure WEATHER_API_KEY is set
     check_environment_variable("DATABASE_URI")
 
 class DevelopmentConfig(Config):
